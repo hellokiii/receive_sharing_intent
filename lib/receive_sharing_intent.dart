@@ -11,8 +11,8 @@ class ReceiveSharingIntent {
   static const EventChannel _eChannelLink =
       const EventChannel("receive_sharing_intent/events-text");
 
-  static Stream<List<SharedMediaFile>> _streamMedia;
-  static Stream<String> _streamLink;
+  static Stream<List<SharedMediaFile>>? _streamMedia;
+  static Stream<String>? _streamLink;
 
   /// Returns a [Future], which completes to one of the following:
   ///
@@ -21,8 +21,8 @@ class ReceiveSharingIntent {
   ///
   /// NOTE. The returned media on iOS (iOS ONLY) is already copied to a temp folder.
   /// So, you need to delete the file after you finish using it
-  static Future<List<SharedMediaFile>> getInitialMedia() async {
-    final String json = await _mChannel.invokeMethod('getInitialMedia');
+  static Future<List<SharedMediaFile>?> getInitialMedia() async {
+    final String? json = await _mChannel.invokeMethod('getInitialMedia');
     if (json == null) return null;
     final encoded = jsonDecode(json);
     return encoded
@@ -34,7 +34,7 @@ class ReceiveSharingIntent {
   ///
   ///   * the initially stored link (possibly null), on successful invocation;
   ///   * a [PlatformException], if the invocation failed in the platform plugin.
-  static Future<String> getInitialText() async {
+  static Future<String?> getInitialText() async {
     return await _mChannel.invokeMethod('getInitialText');
   }
 
@@ -43,8 +43,8 @@ class ReceiveSharingIntent {
   ///
   /// If the link is not valid as a URI or URI reference,
   /// a [FormatException] is thrown.
-  static Future<Uri> getInitialTextAsUri() async {
-    final String data = await getInitialText();
+  static Future<Uri?> getInitialTextAsUri() async {
+    final String? data = await getInitialText();
     if (data == null) return null;
     return Uri.parse(data);
   }
@@ -67,11 +67,10 @@ class ReceiveSharingIntent {
   /// not emit that initial one - query either the `getInitialMedia` instead.
   static Stream<List<SharedMediaFile>> getMediaStream() {
     if (_streamMedia == null) {
-      final stream =
-          _eChannelMedia.receiveBroadcastStream("media").cast<String>();
+      final stream = _eChannelMedia.receiveBroadcastStream("media").cast<String>();
       _streamMedia = stream.transform<List<SharedMediaFile>>(
         new StreamTransformer<String, List<SharedMediaFile>>.fromHandlers(
-          handleData: (String data, EventSink<List<SharedMediaFile>> sink) {
+          handleData: (String? data, EventSink<List<SharedMediaFile>?> sink) {
             if (data == null) {
               sink.add(null);
             } else {
@@ -85,7 +84,7 @@ class ReceiveSharingIntent {
         ),
       );
     }
-    return _streamMedia;
+    return _streamMedia!;
   }
 
   /// Sets up a broadcast stream for receiving incoming link change events.
@@ -108,7 +107,7 @@ class ReceiveSharingIntent {
     if (_streamLink == null) {
       _streamLink = _eChannelLink.receiveBroadcastStream("text").cast<String>();
     }
-    return _streamLink;
+    return _streamLink!;
   }
 
   /// A convenience transformation of the stream to a `Stream<Uri>`.
@@ -123,7 +122,7 @@ class ReceiveSharingIntent {
   static Stream<Uri> getTextStreamAsUri() {
     return getTextStream().transform<Uri>(
       new StreamTransformer<String, Uri>.fromHandlers(
-        handleData: (String data, EventSink<Uri> sink) {
+        handleData: (String? data, EventSink<Uri?> sink) {
           if (data == null) {
             sink.add(null);
           } else {
